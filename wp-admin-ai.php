@@ -851,13 +851,13 @@ add_action('admin_menu', 'meta_manager_add_admin_menu');
 add_action('admin_enqueue_scripts', 'meta_manager_enqueue_styles');
 
 /**
- * Add Meta Manager submenu under Tools
+ * Add WP Admin for AI Agents submenu under Tools
  */
 function meta_manager_add_admin_menu() {
     add_submenu_page(
         'tools.php',
-        __('Meta Manager', 'wp-admin-ai-agents'),
-        __('Meta Manager', 'wp-admin-ai-agents'),
+        __('WP Admin for AI Agents', 'wp-admin-ai-agents'),
+        __('WP Admin for AI Agents', 'wp-admin-ai-agents'),
         'manage_options',
         'meta-manager',
         'meta_manager_admin_page'
@@ -890,7 +890,7 @@ function meta_manager_add_meta_box($post_type) {
     // Add meta box to all post types
     add_meta_box(
         'meta-manager-box',
-        __('Meta Manager', 'wp-admin-ai-agents'),
+        __('WP Admin for AI Agents', 'wp-admin-ai-agents'),
         'meta_manager_render_meta_box',
         $post_type,
         'side', // position (side, normal, advanced)
@@ -1156,7 +1156,7 @@ function meta_manager_ajax_update() {
 }
 
 /**
- * Meta Manager Standalone Admin Page (under Tools)
+ * WP Admin for AI Agents Admin Page (under Tools)
  */
 function meta_manager_admin_page() {
     // Get all posts with meta for browsing
