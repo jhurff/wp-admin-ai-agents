@@ -539,7 +539,7 @@ function meta_manager_can_edit_post($request) {
 function meta_manager_health_check($request) {
     return array(
         'status'    => 'ok',
-        'plugin'    => 'Meta Manager API',
+        'plugin'    => 'WP Admin for AI Agents',
         'version'   => META_MANAGER_VERSION,
         'timestamp' => current_time('Y-m-d\TH:i:s'),
         'auth'      => 'X-API-Key header required for write operations',
@@ -928,7 +928,7 @@ function meta_manager_render_meta_box($post) {
     <div class="meta-manager-box">
         <p class="meta-manager-header">
             <span class="dashicons dashicons-database"></span>
-            <?php _e('Meta Manager', 'wp-admin-ai-agents'); ?>
+            <?php _e('WP Admin for AI Agents', 'wp-admin-ai-agents'); ?>
             <button type="button" class="meta-manager-toggle-all button-link" aria-expanded="false">
                 <?php _e('Show All', 'wp-admin-ai-agents'); ?>
             </button>
@@ -1164,7 +1164,7 @@ function meta_manager_admin_page() {
     
     ?>
     <div class="wrap meta-manager-admin-page">
-        <h1><?php _e('Meta Manager', 'wp-admin-ai-agents'); ?></h1>
+        <h1><?php _e('WP Admin for AI Agents', 'wp-admin-ai-agents'); ?></h1>
         <p><?php _e('View and manage meta fields for any post type.', 'wp-admin-ai-agents'); ?></p>
         
         <hr>
