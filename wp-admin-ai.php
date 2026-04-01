@@ -520,6 +520,65 @@ function wp_admin_ai_register_routes() {
             ),
         ),
     ));
+    
+    /**
+     * Update post categories
+     * 
+     * POST /wp-json/wp-ai/v1/update-categories
+     * Body: {"post_id": 123, "categories": [5, 6]}
+     */
+    register_rest_route('wp-ai/v1', '/update-categories', array(
+        'methods'             => 'POST',
+        'callback'           => 'wp_admin_ai_update_categories',
+        'permission_callback' => 'wp_admin_ai_auth_callback',
+        'args'               => array(
+            'post_id' => array(
+                'required' => true,
+                'validate_callback' => function($param) {
+                    return is_numeric($param);
+                }
+            ),
+            'categories' => array(
+                'required' => true,
+            ),
+        ),
+    ));
+}
+
+/**
+ * Update post categories
+ * 
+ * @param WP_REST_Request $request Full request data
+ * @return array Success/error
+ */
+function wp_admin_ai_update_categories($request) {
+    $post_id = intval($request->get_param('post_id'));
+    $categories = $request->get_param('categories');
+    
+    if (!$post_id || !is_numeric($post_id)) {
+        return new WP_Error('invalid_post_id', 'Invalid post ID', array('status' => 400));
+    }
+    
+    if (!is_array($categories)) {
+        return new WP_Error('invalid_categories', 'Categories must be an array', array('status' => 400));
+    }
+    
+    $post = get_post($post_id);
+    if (!$post) {
+        return new WP_Error('post_not_found', 'Post not found', array('status' => 404));
+    }
+    
+    $result = wp_set_post_categories($post_id, $categories);
+    
+    if ($result) {
+        return array(
+            'success' => true,
+            'post_id' => $post_id,
+            'categories' => $categories
+        );
+    } else {
+        return new WP_Error('update_failed', 'Failed to update categories', array('status' => 500));
+    }
 }
 
 /**
