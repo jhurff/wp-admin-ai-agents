@@ -188,7 +188,7 @@ function wp_admin_ai_auth_callback($request) {
         );
     }
     
-    $validation = meta_manager_validate_api_key($api_key);
+    $validation = wp_admin_ai_validate_api_key($api_key);
     
     if (!$validation['valid']) {
         return new WP_Error(
@@ -247,7 +247,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/health', array(
         'methods'             => 'GET',
-        'callback'           => 'meta_manager_health_check',
+        'callback'           => 'wp_admin_ai_health_check',
         'permission_callback' => 'wp_admin_ai_auth_callback_health',
         'show_in_index'      => false,
     ));
@@ -273,7 +273,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/keys', array(
         'methods'             => 'POST',
-        'callback'           => 'meta_manager_create_key',
+        'callback'           => 'wp_admin_ai_create_key',
         'permission_callback' => function() {
             return current_user_can('manage_options');
         },
@@ -288,7 +288,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/keys', array(
         'methods'             => 'GET',
-        'callback'           => 'meta_manager_list_keys',
+        'callback'           => 'wp_admin_ai_list_keys',
         'permission_callback' => function() {
             return current_user_can('manage_options');
         },
@@ -301,7 +301,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/keys/(?P<key_id>[a-z0-9-]+)', array(
         'methods'             => 'DELETE',
-        'callback'           => 'meta_manager_delete_key',
+        'callback'           => 'wp_admin_ai_delete_key',
         'permission_callback' => function() {
             return current_user_can('manage_options');
         },
@@ -330,7 +330,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/get/(?P<post_id>\d+)', array(
         'methods'             => 'GET',
-        'callback'           => 'meta_manager_get_meta',
+        'callback'           => 'wp_admin_ai_get_meta',
         'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
@@ -366,7 +366,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/update', array(
         'methods'             => 'POST',
-        'callback'           => 'meta_manager_update_meta',
+        'callback'           => 'wp_admin_ai_update_meta',
         'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
@@ -415,7 +415,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/bulk-update', array(
         'methods'             => 'POST',
-        'callback'           => 'meta_manager_bulk_update',
+        'callback'           => 'wp_admin_ai_bulk_update',
         'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
@@ -462,7 +462,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/update-history', array(
         'methods'             => 'POST',
-        'callback'           => 'meta_manager_update_history',
+        'callback'           => 'wp_admin_ai_update_history',
         'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
@@ -509,7 +509,7 @@ function wp_admin_ai_register_routes() {
      */
     register_rest_route('wp-ai/v1', '/update-post', array(
         'methods'             => 'POST',
-        'callback'           => 'meta_manager_update_post',
+        'callback'           => 'wp_admin_ai_update_post',
         'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
@@ -560,7 +560,7 @@ function wp_admin_ai_create_key($request) {
     $name = $request->get_param('name') ?: 'Unnamed Key';
     $scopes = $request->get_param('scopes') ?: array('read', 'write');
     
-    $raw_key = meta_manager_generate_api_key($name, $scopes);
+    $raw_key = wp_admin_ai_generate_api_key($name, $scopes);
     
     if (!$raw_key) {
         return new WP_Error(
@@ -586,7 +586,7 @@ function wp_admin_ai_create_key($request) {
  * List all API keys (admin only)
  */
 function wp_admin_ai_list_keys($request) {
-    $keys = meta_manager_get_all_keys();
+    $keys = wp_admin_ai_get_all_keys();
     
     return array(
         'success' => true,
@@ -601,7 +601,7 @@ function wp_admin_ai_list_keys($request) {
 function wp_admin_ai_delete_key($request) {
     $key_id = $request->get_param('key_id');
     
-    $deleted = meta_manager_delete_api_key($key_id);
+    $deleted = wp_admin_ai_delete_api_key($key_id);
     
     if (!$deleted) {
         return new WP_Error(
@@ -922,7 +922,7 @@ function wp_admin_ai_render_meta_box($post) {
     }
     
     // Nonce for security
-    wp_nonce_field('meta_manager_save_meta', 'meta_manager_nonce');
+    wp_nonce_field('wp_admin_ai_save_meta', 'wp_admin_ai_nonce');
     
     ?>
     <div class="meta-manager-box">
@@ -1084,7 +1084,7 @@ function wp_admin_ai_render_meta_box($post) {
                     type: 'POST',
                     data: {
                         action: 'wp_admin_ai_ajax_update',
-                        nonce: $('#meta_manager_nonce').val(),
+                        nonce: $('#wp_admin_ai_nonce').val(),
                         post_id: <?php echo $post->ID; ?>,
                         meta_key: key,
                         meta_value: value
@@ -1123,7 +1123,7 @@ add_action('wp_ajax_wp_admin_ai_ajax_update', 'wp_admin_ai_ajax_update');
 
 function wp_admin_ai_ajax_update() {
     // Verify nonce
-    if (!wp_verify_nonce($_POST['nonce'], 'meta_manager_save_meta')) {
+    if (!wp_verify_nonce($_POST['nonce'], 'wp_admin_ai_save_meta')) {
         wp_send_json_error('Security check failed');
     }
     
