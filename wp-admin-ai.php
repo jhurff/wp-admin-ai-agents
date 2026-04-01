@@ -231,7 +231,7 @@ define('META_MANAGER_PLUGIN_BASENAME', plugin_basename(__FILE__));
 /**
  * Add REST API endpoints for meta management
  */
-add_action('rest_api_init', 'meta_manager_register_routes');
+add_action('rest_api_init', 'wp_admin_ai_register_routes');
 
 /**
  * Register REST API routes
@@ -248,7 +248,7 @@ function wp_admin_ai_register_routes() {
     register_rest_route('wp-ai/v1', '/health', array(
         'methods'             => 'GET',
         'callback'           => 'meta_manager_health_check',
-        'permission_callback' => 'meta_manager_auth_callback_health',
+        'permission_callback' => 'wp_admin_ai_auth_callback_health',
         'show_in_index'      => false,
     ));
     
@@ -331,7 +331,7 @@ function wp_admin_ai_register_routes() {
     register_rest_route('wp-ai/v1', '/get/(?P<post_id>\d+)', array(
         'methods'             => 'GET',
         'callback'           => 'meta_manager_get_meta',
-        'permission_callback' => 'meta_manager_auth_callback',
+        'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
                 'validate_callback' => function($param) {
@@ -367,7 +367,7 @@ function wp_admin_ai_register_routes() {
     register_rest_route('wp-ai/v1', '/update', array(
         'methods'             => 'POST',
         'callback'           => 'meta_manager_update_meta',
-        'permission_callback' => 'meta_manager_auth_callback',
+        'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
                 'required' => true,
@@ -416,7 +416,7 @@ function wp_admin_ai_register_routes() {
     register_rest_route('wp-ai/v1', '/bulk-update', array(
         'methods'             => 'POST',
         'callback'           => 'meta_manager_bulk_update',
-        'permission_callback' => 'meta_manager_auth_callback',
+        'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
                 'required' => true,
@@ -463,7 +463,7 @@ function wp_admin_ai_register_routes() {
     register_rest_route('wp-ai/v1', '/update-history', array(
         'methods'             => 'POST',
         'callback'           => 'meta_manager_update_history',
-        'permission_callback' => 'meta_manager_auth_callback',
+        'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
                 'required' => true,
@@ -510,7 +510,7 @@ function wp_admin_ai_register_routes() {
     register_rest_route('wp-ai/v1', '/update-post', array(
         'methods'             => 'POST',
         'callback'           => 'meta_manager_update_post',
-        'permission_callback' => 'meta_manager_auth_callback',
+        'permission_callback' => 'wp_admin_ai_auth_callback',
         'args'               => array(
             'post_id' => array(
                 'required' => true,
@@ -523,11 +523,11 @@ function wp_admin_ai_register_routes() {
 }
 
 /**
- * Permission callback - DEPRECATED, use meta_manager_auth_callback instead
+ * Permission callback - DEPRECATED, use wp_admin_ai_auth_callback instead
  * Kept for backwards compatibility
  */
 function wp_admin_ai_can_edit_post($request) {
-    return meta_manager_auth_callback($request);
+    return wp_admin_ai_auth_callback($request);
 }
 
 /**
@@ -827,7 +827,7 @@ function wp_admin_ai_activate() {
     // Flush rewrite rules for REST API routes
     flush_rewrite_rules();
 }
-register_activation_hook(__FILE__, 'meta_manager_activate');
+register_activation_hook(__FILE__, 'wp_admin_ai_activate');
 
 /**
  * Plugin deactivation hook
@@ -836,7 +836,7 @@ function wp_admin_ai_deactivate() {
     // Flush rewrite rules
     flush_rewrite_rules();
 }
-register_deactivation_hook(__FILE__, 'meta_manager_deactivate');
+register_deactivation_hook(__FILE__, 'wp_admin_ai_deactivate');
 
 /**
  * =============================================================================
@@ -847,8 +847,8 @@ register_deactivation_hook(__FILE__, 'meta_manager_deactivate');
 /**
  * Add Meta Manager admin menu and styles
  */
-add_action('admin_menu', 'meta_manager_add_admin_menu');
-add_action('admin_enqueue_scripts', 'meta_manager_enqueue_styles');
+add_action('admin_menu', 'wp_admin_ai_add_admin_menu');
+add_action('admin_enqueue_scripts', 'wp_admin_ai_enqueue_styles');
 
 /**
  * Add WP Admin for AI Agents submenu under Tools
@@ -860,7 +860,7 @@ function wp_admin_ai_add_admin_menu() {
         __('WP Admin for AI Agents', 'wp-admin-ai-agents'),
         'manage_options',
         'meta-manager',
-        'meta_manager_admin_page'
+        'wp_admin_ai_admin_page'
     );
 }
 
@@ -884,14 +884,14 @@ function wp_admin_ai_enqueue_styles($hook) {
 /**
  * Add Meta Manager meta box to post editor
  */
-add_action('add_meta_boxes', 'meta_manager_add_meta_box');
+add_action('add_meta_boxes', 'wp_admin_ai_add_meta_box');
 
 function wp_admin_ai_add_meta_box($post_type) {
     // Add meta box to all post types
     add_meta_box(
         'meta-manager-box',
         __('WP Admin for AI Agents', 'wp-admin-ai-agents'),
-        'meta_manager_render_meta_box',
+        'wp_admin_ai_render_meta_box',
         $post_type,
         'side', // position (side, normal, advanced)
         'low'   // priority
@@ -1083,7 +1083,7 @@ function wp_admin_ai_render_meta_box($post) {
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'meta_manager_ajax_update',
+                        action: 'wp_admin_ai_ajax_update',
                         nonce: $('#meta_manager_nonce').val(),
                         post_id: <?php echo $post->ID; ?>,
                         meta_key: key,
@@ -1119,7 +1119,7 @@ function wp_admin_ai_render_meta_box($post) {
 /**
  * AJAX handler for updating meta via admin UI
  */
-add_action('wp_ajax_meta_manager_ajax_update', 'meta_manager_ajax_update');
+add_action('wp_ajax_wp_admin_ai_ajax_update', 'wp_admin_ai_ajax_update');
 
 function wp_admin_ai_ajax_update() {
     // Verify nonce
