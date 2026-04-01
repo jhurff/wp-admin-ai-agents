@@ -50,7 +50,7 @@ if (!defined('ABSPATH')) {
  * @param array $scopes Optional permissions scope
  * @return string|false The raw API key (only shown once) or false on failure
  */
-function meta_manager_generate_api_key($name, $scopes = array('read', 'write')) {
+function wp_admin_ai_generate_api_key($name, $scopes = array('read', 'write')) {
     global $wpdb;
     
     // Generate key parts
@@ -90,7 +90,7 @@ function meta_manager_generate_api_key($name, $scopes = array('read', 'write')) 
  * @param string $raw_key The raw API key from request
  * @return array ['valid' => bool, 'key_id' => string|null, 'scopes' => array]
  */
-function meta_manager_validate_api_key($raw_key) {
+function wp_admin_ai_validate_api_key($raw_key) {
     if (empty($raw_key) || !is_string($raw_key)) {
         return array('valid' => false, 'key_id' => null, 'scopes' => array());
     }
@@ -123,7 +123,7 @@ function meta_manager_validate_api_key($raw_key) {
  * @param string $key_id The key ID to delete
  * @return bool Success
  */
-function meta_manager_delete_api_key($key_id) {
+function wp_admin_ai_delete_api_key($key_id) {
     $keys = get_option('wp_admin_ai_api_keys', array());
     
     if (isset($keys[$key_id])) {
@@ -139,7 +139,7 @@ function meta_manager_delete_api_key($key_id) {
  * 
  * @return array Array of key metadata
  */
-function meta_manager_get_all_keys() {
+function wp_admin_ai_get_all_keys() {
     $keys = get_option('wp_admin_ai_api_keys', array());
     $safe_keys = array();
     
@@ -163,7 +163,7 @@ function meta_manager_get_all_keys() {
  * @param WP_REST_Request $request Full request data
  * @return bool|WP_Error True if permitted, WP_Error if not
  */
-function meta_manager_auth_callback($request) {
+function wp_admin_ai_auth_callback($request) {
     // First, try WordPress cookie auth (for admin UI usage)
     if (current_user_can('edit_posts')) {
         return true;
@@ -214,7 +214,7 @@ function meta_manager_auth_callback($request) {
 /**
  * Authentication callback for health check (no auth required)
  */
-function meta_manager_auth_callback_health($request) {
+function wp_admin_ai_auth_callback_health($request) {
     return true;
 }
 
@@ -236,7 +236,7 @@ add_action('rest_api_init', 'meta_manager_register_routes');
 /**
  * Register REST API routes
  */
-function meta_manager_register_routes() {
+function wp_admin_ai_register_routes() {
     
     /**
      * Health check endpoint
@@ -526,7 +526,7 @@ function meta_manager_register_routes() {
  * Permission callback - DEPRECATED, use meta_manager_auth_callback instead
  * Kept for backwards compatibility
  */
-function meta_manager_can_edit_post($request) {
+function wp_admin_ai_can_edit_post($request) {
     return meta_manager_auth_callback($request);
 }
 
@@ -536,7 +536,7 @@ function meta_manager_can_edit_post($request) {
  * @param WP_REST_Request $request Full request data
  * @return array Health status
  */
-function meta_manager_health_check($request) {
+function wp_admin_ai_health_check($request) {
     return array(
         'status'    => 'ok',
         'plugin'    => 'WP Admin for AI Agents',
@@ -556,7 +556,7 @@ function meta_manager_health_check($request) {
 /**
  * Create new API key (admin only)
  */
-function meta_manager_create_key($request) {
+function wp_admin_ai_create_key($request) {
     $name = $request->get_param('name') ?: 'Unnamed Key';
     $scopes = $request->get_param('scopes') ?: array('read', 'write');
     
@@ -585,7 +585,7 @@ function meta_manager_create_key($request) {
 /**
  * List all API keys (admin only)
  */
-function meta_manager_list_keys($request) {
+function wp_admin_ai_list_keys($request) {
     $keys = meta_manager_get_all_keys();
     
     return array(
@@ -598,7 +598,7 @@ function meta_manager_list_keys($request) {
 /**
  * Delete API key (admin only)
  */
-function meta_manager_delete_key($request) {
+function wp_admin_ai_delete_key($request) {
     $key_id = $request->get_param('key_id');
     
     $deleted = meta_manager_delete_api_key($key_id);
@@ -623,7 +623,7 @@ function meta_manager_delete_key($request) {
  * @param WP_REST_Request $request Full request data
  * @return array Post meta data
  */
-function meta_manager_get_meta($request) {
+function wp_admin_ai_get_meta($request) {
     $post_id = intval($request->get_param('post_id'));
     $meta = get_post_meta($post_id);
     
@@ -645,7 +645,7 @@ function meta_manager_get_meta($request) {
  * @param WP_REST_Request $request Full request data
  * @return array Update result
  */
-function meta_manager_update_meta($request) {
+function wp_admin_ai_update_meta($request) {
     $post_id = intval($request->get_param('post_id'));
     $meta_key = $request->get_param('meta_key');
     $meta_value = $request->get_param('meta_value');
@@ -672,7 +672,7 @@ function meta_manager_update_meta($request) {
  * @param WP_REST_Request $request Full request data
  * @return array Bulk update results
  */
-function meta_manager_bulk_update($request) {
+function wp_admin_ai_bulk_update($request) {
     $post_id = intval($request->get_param('post_id'));
     $meta_fields = $request->get_param('meta');
     
@@ -705,7 +705,7 @@ function meta_manager_bulk_update($request) {
  * @param WP_REST_Request $request Full request data
  * @return array Update result with history count
  */
-function meta_manager_update_history($request) {
+function wp_admin_ai_update_history($request) {
     $post_id = intval($request->get_param('post_id'));
     $price = floatval($request->get_param('price'));
     $change = floatval($request->get_param('change'));
@@ -755,7 +755,7 @@ function meta_manager_update_history($request) {
  * @param WP_REST_Request $request Full request data
  * @return array Update result
  */
-function meta_manager_update_post($request) {
+function wp_admin_ai_update_post($request) {
     $post_id = intval($request->get_param('post_id'));
     
     // Verify post exists
@@ -823,7 +823,7 @@ function meta_manager_update_post($request) {
 /**
  * Plugin activation hook
  */
-function meta_manager_activate() {
+function wp_admin_ai_activate() {
     // Flush rewrite rules for REST API routes
     flush_rewrite_rules();
 }
@@ -832,7 +832,7 @@ register_activation_hook(__FILE__, 'meta_manager_activate');
 /**
  * Plugin deactivation hook
  */
-function meta_manager_deactivate() {
+function wp_admin_ai_deactivate() {
     // Flush rewrite rules
     flush_rewrite_rules();
 }
@@ -853,7 +853,7 @@ add_action('admin_enqueue_scripts', 'meta_manager_enqueue_styles');
 /**
  * Add WP Admin for AI Agents submenu under Tools
  */
-function meta_manager_add_admin_menu() {
+function wp_admin_ai_add_admin_menu() {
     add_submenu_page(
         'tools.php',
         __('WP Admin for AI Agents', 'wp-admin-ai-agents'),
@@ -867,7 +867,7 @@ function meta_manager_add_admin_menu() {
 /**
  * Enqueue admin styles
  */
-function meta_manager_enqueue_styles($hook) {
+function wp_admin_ai_enqueue_styles($hook) {
     // Only load on specific pages
     if ($hook !== 'post.php' && $hook !== 'post-new.php' && $hook !== 'tools_page_meta-manager') {
         return;
@@ -886,7 +886,7 @@ function meta_manager_enqueue_styles($hook) {
  */
 add_action('add_meta_boxes', 'meta_manager_add_meta_box');
 
-function meta_manager_add_meta_box($post_type) {
+function wp_admin_ai_add_meta_box($post_type) {
     // Add meta box to all post types
     add_meta_box(
         'meta-manager-box',
@@ -901,7 +901,7 @@ function meta_manager_add_meta_box($post_type) {
 /**
  * Render the Meta Manager meta box content
  */
-function meta_manager_render_meta_box($post) {
+function wp_admin_ai_render_meta_box($post) {
     // Get all meta for this post
     $all_meta = get_post_meta($post->ID);
     
@@ -1121,7 +1121,7 @@ function meta_manager_render_meta_box($post) {
  */
 add_action('wp_ajax_meta_manager_ajax_update', 'meta_manager_ajax_update');
 
-function meta_manager_ajax_update() {
+function wp_admin_ai_ajax_update() {
     // Verify nonce
     if (!wp_verify_nonce($_POST['nonce'], 'meta_manager_save_meta')) {
         wp_send_json_error('Security check failed');
@@ -1158,18 +1158,138 @@ function meta_manager_ajax_update() {
 /**
  * WP Admin for AI Agents Admin Page (under Tools)
  */
-function meta_manager_admin_page() {
+function wp_admin_ai_admin_page() {
     // Get all posts with meta for browsing
     $post_types = get_post_types(array('public' => true), 'objects');
+    $api_keys = wp_admin_ai_get_all_keys();
+    $site_url = get_site_url();
+    
+    // Handle generate key action
+    $message = '';
+    $new_key = '';
+    if (isset($_POST['wp_admin_ai_generate_key']) && current_user_can('manage_options')) {
+        check_admin_referer('wp_admin_ai_generate_key');
+        $name = sanitize_text_field($_POST['key_name'] ?: 'API Key');
+        $result = wp_admin_ai_generate_api_key($name, array('read', 'write'));
+        if ($result) {
+            $new_key = $result;
+            $api_keys = wp_admin_ai_get_all_keys(); // Refresh list
+        }
+    }
+    
+    // Handle delete key action
+    if (isset($_POST['wp_admin_ai_delete_key']) && current_user_can('manage_options')) {
+        check_admin_referer('wp_admin_ai_delete_key');
+        $key_id = sanitize_text_field($_POST['key_id']);
+        wp_admin_ai_delete_api_key($key_id);
+        $api_keys = wp_admin_ai_get_all_keys(); // Refresh list
+        $message = 'Key deleted successfully.';
+    }
     
     ?>
-    <div class="wrap meta-manager-admin-page">
+    <div class="wrap wp-admin-ai-page">
         <h1><?php _e('WP Admin for AI Agents', 'wp-admin-ai-agents'); ?></h1>
-        <p><?php _e('View and manage meta fields for any post type.', 'wp-admin-ai-agents'); ?></p>
+        <p><?php _e('AI agent-optimized WordPress admin. Generate API keys below to enable AI agents to manage your WordPress content.', 'wp-admin-ai-agents'); ?></p>
         
-        <hr>
+        <?php if ($new_key): ?>
+        <div class="notice notice-success" style="padding: 15px; margin: 20px 0; background: #d4edda; border-left: 4px solid #155724;">
+            <h2 style="margin: 0 0 10px 0;">✅ New API Key Generated!</h2>
+            <p><strong>⚠️ Copy this key now - it will not be shown again:</strong></p>
+            <input type="text" readonly value="<?php echo esc_attr($new_key); ?>" style="width: 100%; padding: 10px; font-family: monospace; background: white; border: 2px solid #155724;" onclick="this.select()">
+            <p style="margin-top: 10px;"><small>Use header: <code>X-API-Key: <?php echo esc_attr(substr($new_key, 0, 20)); ?>...</code></small></p>
+        </div>
+        <?php endif; ?>
         
-        <h2><?php _e('Quick Stats', 'wp-admin-ai-agents'); ?></h2>
+        <?php if ($message): ?>
+        <div class="notice notice-info"><?php echo esc_html($message); ?></div>
+        <?php endif; ?>
+        
+        <hr style="margin: 30px 0;">
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <h2><?php _e('🔑 API Keys', 'wp-admin-ai-agents'); ?></h2>
+                <p><?php _e('Generate keys for AI agents. Each key can be revoked individually.', 'wp-admin-ai-agents'); ?></p>
+                
+                <form method="post" style="background: #f0f0f1; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                    <?php wp_nonce_field('wp_admin_ai_generate_key'); ?>
+                    <label for="key_name" style="display: block; margin-bottom: 8px; font-weight: bold;">
+                        <?php _e('Key Name:', 'wp-admin-ai-agents'); ?>
+                    </label>
+                    <input type="text" name="key_name" id="key_name" placeholder="e.g., Spike AI Agent, Claude Desktop" style="width: 100%; max-width: 400px; padding: 8px; margin-bottom: 10px;">
+                    <p class="submit">
+                        <input type="submit" name="wp_admin_ai_generate_key" class="button button-primary" value="<?php _e('Generate New Key', 'wp-admin-ai-agents'); ?>">
+                    </p>
+                </form>
+                
+                <?php if (empty($api_keys)): ?>
+                    <p style="color: #666; font-style: italic;"><?php _e('No API keys yet. Generate one above.', 'wp-admin-ai-agents'); ?></p>
+                <?php else: ?>
+                    <h3 style="margin-top: 30px;"><?php _e('Existing Keys', 'wp-admin-ai-agents'); ?></h3>
+                    <table class="widefat" style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th><?php _e('Name', 'wp-admin-ai-agents'); ?></th>
+                                <th><?php _e('Key Prefix', 'wp-admin-ai-agents'); ?></th>
+                                <th><?php _e('Scopes', 'wp-admin-ai-agents'); ?></th>
+                                <th><?php _e('Uses', 'wp-admin-ai-agents'); ?></th>
+                                <th><?php _e('Last Used', 'wp-admin-ai-agents'); ?></th>
+                                <th><?php _e('Actions', 'wp-admin-ai-agents'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($api_keys as $key_id => $key_data): ?>
+                                <tr>
+                                    <td><strong><?php echo esc_html($key_data['name']); ?></strong></td>
+                                    <td><code><?php echo esc_html($key_data['key_prefix']); ?>...</code></td>
+                                    <td><?php echo esc_html(implode(', ', $key_data['scopes'])); ?></td>
+                                    <td><?php echo intval($key_data['use_count']); ?></td>
+                                    <td><?php echo $key_data['last_used'] ? esc_html($key_data['last_used']) : '<em>Never</em>'; ?></td>
+                                    <td>
+                                        <form method="post" style="display: inline;">
+                                            <?php wp_nonce_field('wp_admin_ai_delete_key'); ?>
+                                            <input type="hidden" name="key_id" value="<?php echo esc_attr($key_id); ?>">
+                                            <input type="submit" name="wp_admin_ai_delete_key" class="button button-small" value="<?php _e('Delete', 'wp-admin-ai-agents'); ?>" onclick="return confirm('Delete this key?');">
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+            
+            <div style="flex: 1; min-width: 300px;">
+                <h2><?php _e('📡 API Usage', 'wp-admin-ai-agents'); ?></h2>
+                
+                <h3><?php _e('Authentication', 'wp-admin-ai-agents'); ?></h3>
+                <p><?php _e('Include your API key in the X-API-Key header:', 'wp-admin-ai-agents'); ?></p>
+                <pre style="background: #2d2d2d; color: #fff; padding: 15px; border-radius: 5px; overflow-x: auto;">
+-H "X-API-Key: mm_live_xxxxxxxx..."</pre>
+                
+                <h3><?php _e('Quick Examples', 'wp-admin-ai-agents'); ?></h3>
+                <p><strong><?php _e('Health Check:', 'wp-admin-ai-agents'); ?></strong></p>
+                <pre style="background: #2d2d2d; color: #fff; padding: 15px; border-radius: 5px; font-size: 12px; overflow-x: auto;">
+curl <?php echo esc_html($site_url); ?>/wp-json/wp-ai/v1/health</pre>
+                
+                <p><strong><?php _e('Get Post Meta:', 'wp-admin-ai-agents'); ?></strong></p>
+                <pre style="background: #2d2d2d; color: #fff; padding: 15px; border-radius: 5px; font-size: 12px; overflow-x: auto;">
+curl -H "X-API-Key: YOUR_KEY" \
+  <?php echo esc_html($site_url); ?>/wp-json/wp-ai/v1/get/363</pre>
+                
+                <p><strong><?php _e('Update Meta:', 'wp-admin-ai-agents'); ?></strong></p>
+                <pre style="background: #2d2d2d; color: #fff; padding: 15px; border-radius: 5px; font-size: 12px; overflow-x: auto;">
+curl -X POST \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"post_id":363,"meta_key":"_price","meta_value":"5.60"}' \
+  <?php echo esc_html($site_url); ?>/wp-json/wp-ai/v1/update</pre>
+            </div>
+        </div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <h2><?php _e('📊 Post Types', 'wp-admin-ai-agents'); ?></h2>
         <table class="widefat">
             <thead>
                 <tr>
@@ -1197,59 +1317,6 @@ function meta_manager_admin_page() {
                 <?php endforeach; ?>
             </tbody>
         </table>
-        
-        <hr>
-        
-        <h2><?php _e('API Endpoints', 'wp-admin-ai-agents'); ?></h2>
-        <p><?php _e('Use these REST API endpoints to update meta from external applications:', 'wp-admin-ai-agents'); ?></p>
-        
-        <table class="widefat">
-            <thead>
-                <tr>
-                    <th><?php _e('Method', 'wp-admin-ai-agents'); ?></th>
-                    <th><?php _e('Endpoint', 'wp-admin-ai-agents'); ?></th>
-                    <th><?php _e('Description', 'wp-admin-ai-agents'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><span class="dashicons dashicons-yes-alt" style="color:green;"></span> GET</td>
-                    <td><code>/wp-json/wp-ai/v1/health</code></td>
-                    <td><?php _e('Health check (no auth required)', 'wp-admin-ai-agents'); ?></td>
-                </tr>
-                <tr>
-                    <td><span class="dashicons dashicons-yes-alt" style="color:green;"></span> GET</td>
-                    <td><code>/wp-json/wp-ai/v1/get/{post_id}</code></td>
-                    <td><?php _e('Get all meta for a post', 'wp-admin-ai-agents'); ?></td>
-                </tr>
-                <tr>
-                    <td><span class="dashicons dashicons-yes-alt" style="color:green;"></span> POST</td>
-                    <td><code>/wp-json/wp-ai/v1/update</code></td>
-                    <td><?php _e('Update single meta field', 'wp-admin-ai-agents'); ?></td>
-                </tr>
-                <tr>
-                    <td><span class="dashicons dashicons-yes-alt" style="color:green;"></span> POST</td>
-                    <td><code>/wp-json/wp-ai/v1/bulk-update</code></td>
-                    <td><?php _e('Update multiple meta fields', 'wp-admin-ai-agents'); ?></td>
-                </tr>
-                <tr>
-                    <td><span class="dashicons dashicons-yes-alt" style="color:green;"></span> POST</td>
-                    <td><code>/wp-json/wp-ai/v1/update-history</code></td>
-                    <td><?php _e('Add price history entry (convenience endpoint)', 'wp-admin-ai-agents'); ?></td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <hr>
-        
-        <h2><?php _e('Authentication', 'wp-admin-ai-agents'); ?></h2>
-        <p><?php _e('All endpoints (except health) require WordPress authentication. Use Basic Auth with your WordPress username and password, or Application Passwords.', 'wp-admin-ai-agents'); ?></p>
-        <pre style="background:#f0f0f0;padding:15px;border-radius:5px;">
-# Example: Update meta via curl
-curl -X POST https://yoursite.com/wp-json/wp-ai/v1/update \
-  -u "username:password" \
-  -H "Content-Type: application/json" \
-  -d '{"post_id": 363, "meta_key": "_ws_last_price", "meta_value": "5.60"}'</pre>
     </div>
     <?php
 }
