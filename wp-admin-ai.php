@@ -543,6 +543,16 @@ function wp_admin_ai_register_routes() {
             ),
         ),
     ));
+    
+    /**
+     * Get all tracked company prices (public endpoint - no auth required)
+     * GET /wp-json/wp-ai/v1/tracked-prices
+     */
+    register_rest_route('wp-ai/v1', '/tracked-prices', array(
+        'methods'             => 'GET',
+        'callback'           => 'wp_admin_ai_get_tracked_prices',
+        'permission_callback' => '__return_true', // Public - no auth needed
+    ));
 }
 
 /**
@@ -579,6 +589,69 @@ function wp_admin_ai_update_categories($request) {
     } else {
         return new WP_Error('update_failed', 'Failed to update categories', array('status' => 500));
     }
+}
+
+/**
+ * Get all tracked companies with live prices from WordPress
+ * 
+ * GET /wp-json/wp-ai/v1/tracked-prices
+ * No auth required for read (public data)
+ */
+function wp_admin_ai_get_tracked_prices($request) {
+    // Query all ws_company posts
+    $companies = get_posts(array(
+        'post_type' => 'ws_company',
+        'posts_per_page' => 100,
+        'post_status' => 'publish',
+        'orderby' => 'title',
+        'order' => 'ASC'
+    ));
+    
+    $result = array();
+    foreach ($companies as $post) {
+        $meta = get_post_meta($post->ID);
+        
+        // Parse price history
+        $history = array();
+        if (!empty($meta['_ws_price_history'][0])) {
+            $decoded = json_decode($meta['_ws_price_history'][0], true);
+            if (is_array($decoded)) {
+                $history = $decoded;
+            }
+        }
+        
+        // Calculate change from oldest to newest
+        $change = 0;
+        $change_pct = 0;
+        if (count($history) >= 2) {
+            $oldest = floatval($history[0]['price']);
+            $newest = floatval($history[count($history)-1]['price']);
+            $change = round($newest - $oldest, 2);
+            $change_pct = $oldest > 0 ? round(($change / $oldest) * 100, 2) : 0;
+        }
+        
+        // Get ticker from title or meta
+        $ticker = !empty($meta['_ws_ticker'][0]) ? $meta['_ws_ticker'][0] : get_the_title($post->ID);
+        
+        $result[] = array(
+            'id' => $post->ID,
+            'ticker' => $ticker,
+            'name' => get_the_title($post->ID),
+            'slug' => $post->post_name,
+            'current_price' => !empty($meta['_ws_last_price'][0]) ? floatval($meta['_ws_last_price'][0]) : 0,
+            'change' => $change,
+            'change_pct' => $change_pct,
+            'history' => $history,
+            'last_updated' => !empty($meta['_ws_last_price'][0]) ? get_the_modified_time('Y-m-d H:i:s', $post->ID) : null
+        );
+    }
+    
+    return array(
+        'success' => true,
+        'count' => count($result),
+        'companies' => $result,
+        'generated_at' => current_time('Y-m-d H:i:s')
+    );
 }
 
 /**
